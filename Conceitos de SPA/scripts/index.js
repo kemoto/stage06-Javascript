@@ -10,7 +10,7 @@ function route(event) {
   event.preventDefault();
 
   window.history.pushState({}, "", event.target.href) //adicionando o href do evento no histórico do window
-
+  
   handle();
 }
 
@@ -20,11 +20,23 @@ function handle() {
 
   fetch(route).then(data => data.text()).then(html => {
     document.querySelector('#app').innerHTML = html;
+    changeBackground();
   })
 }
 
-function teste() {
-  console.log('event')
+function changeBackground() {
+  const app = document.querySelector("#app");
+  if(app.children[0].classList == "home") {
+    document.documentElement.style.setProperty("--backgroundImg", "url('/assets/mountains-universe-1.png')")
+  }
+
+  if(app.children[0].classList == "universe") {
+    document.documentElement.style.setProperty("--backgroundImg", "url('/assets/mountains-universe02.png')")
+  }
+
+  if(app.children[0].classList == "exploration") {
+    document.documentElement.style.setProperty("--backgroundImg", "url('/assets/mountains-universe-3.png')")
+  }
 }
 
 handle();
