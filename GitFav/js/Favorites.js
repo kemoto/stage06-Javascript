@@ -23,20 +23,22 @@ class Favorites {
   }
 
   load() {
-    this.entries = [
-      {
-        login: "kemoto",
-        name: "Vitor Tominaga",
-        repositories: "123",
-        followers: "1234",
-      },
-      {
-        login: "aaa",
-        name: "Vitora",
-        repositories: "1234",
-        followers: "12346",
-      },
-    ];
+    this.entries = [];
+  }
+
+  async add(username) {
+    try {
+      const user = await GithubUser.search(username);
+  
+      if(user.login == undefined) {
+        throw new Error("Usuário não encontrado!")
+      }
+
+      this.entries = [user, ...this.entries];
+      this.update();
+    } catch(e) {
+      alert(e.message);
+    }
   }
 
   removeFavorite(user) {
@@ -58,8 +60,16 @@ export class FavoritesView extends Favorites {
 
     this.update();
 
-    GithubUser.search('kemoto').then(user => console.log(user));
-    
+    this.onAdd();
+  }
+
+  onAdd() {
+    const addButton = this.root.querySelector(".search button");
+    addButton.onclick = () => {
+      const { value } = this.root.querySelector(".search input");
+
+      this.add(value);
+    }
   }
 
   update() {
@@ -73,7 +83,7 @@ export class FavoritesView extends Favorites {
       row.querySelector(".user a").href = `https://github.com/${entry.login}`;
       row.querySelector(".user p").textContent = `${entry.name}`;
       row.querySelector(".user span").textContent = `/${entry.login}`;
-      row.querySelector(".repositories").textContent = `${entry.repositories}`;
+      row.querySelector(".repositories").textContent = `${entry.public_repos}`;
       row.querySelector(".followers").textContent = `${entry.followers}`;
 
       row.querySelector("td button").onclick = () => {
