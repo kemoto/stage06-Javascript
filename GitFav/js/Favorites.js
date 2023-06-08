@@ -1,10 +1,10 @@
 class GithubUser {
   static search(username) {
-    const endpoint = `https://api.github.com/users/${username}`
+    const endpoint = `https://api.github.com/users/${username}`;
 
     return fetch(endpoint)
-      .then(data => data.json())
-      .then(({login, name, public_repos, followers}) => ({
+      .then((data) => data.json())
+      .then(({ login, name, public_repos, followers }) => ({
         login,
         name,
         public_repos,
@@ -23,32 +23,48 @@ class Favorites {
   }
 
   load() {
-    this.entries = [];
+    this.entries = JSON.parse(localStorage.getItem("@github-favorites")) || [];
+  }
+
+  save() {
+    localStorage.setItem("@github-favorites", JSON.stringify(this.entries));
   }
 
   async add(username) {
     try {
+      const userExists = this.entries.find(
+        (entry) => entry.login == username
+      );
+
+      if (userExists) {
+        throw new Error("Usuário já cadastrado!");
+      }
+
       const user = await GithubUser.search(username);
-  
-      if(user.login == undefined) {
-        throw new Error("Usuário não encontrado!")
+
+      if (user.login == undefined) {
+        throw new Error("Usuário não encontrado!");
       }
 
       this.entries = [user, ...this.entries];
+      this.save();
       this.update();
-    } catch(e) {
+    } catch (e) {
       alert(e.message);
     }
   }
 
   removeFavorite(user) {
-    this.entries = this.entries.filter(entry => { //O filter cria um novo array somente com os valores que deram true
-      if(entry.login == user.login) {
+    this.entries = this.entries.filter((entry) => {
+      //O filter cria um novo array somente com os valores que deram true
+      if (entry.login == user.login) {
         return false; //Retornando false a entrada que bate com a confirmação não entra no novo array filtrado
       } else {
         return true;
       }
-    })
+    });
+
+    this.save();
 
     this.update();
   }
@@ -69,16 +85,18 @@ export class FavoritesView extends Favorites {
       const { value } = this.root.querySelector(".search input");
 
       this.add(value);
-    }
+    };
   }
 
   update() {
     this.removeAllTr();
 
-    this.entries.forEach(entry => {
+    this.entries.forEach((entry) => {
       const row = this.createRow();
 
-      row.querySelector(".user img").src = `https://github.com/${entry.login}.png`;
+      row.querySelector(
+        ".user img"
+      ).src = `https://github.com/${entry.login}.png`;
       row.querySelector(".user img").alt = `Imagem de ${entry.name}`;
       row.querySelector(".user a").href = `https://github.com/${entry.login}`;
       row.querySelector(".user p").textContent = `${entry.name}`;
@@ -89,13 +107,15 @@ export class FavoritesView extends Favorites {
       row.querySelector("td button").onclick = () => {
         const isOk = confirm("Deseja deletar essa linha?");
 
-        if(isOk) {
+        if (isOk) {
           this.removeFavorite(entry);
         }
-      }
+      };
 
-      this.tbody.append(row)
-    })
+      this.tbody.append(row);
+    });
+
+    this.updateEmptyTable();
   }
 
   createRow() {
@@ -126,4 +146,16 @@ export class FavoritesView extends Favorites {
       tr.remove();
     });
   }
+
+  updateEmptyTable() { 
+    if(this.entries.length !== 0) {
+      document.querySelector(".empty").classList.add("hide");
+      document.querySelector(".notEmpty").classList.remove("hide");
+    } else {
+      document.querySelector(".empty").classList.remove("hide");
+      document.querySelector(".notEmpty").classList.add("hide");
+    }
+  }
 }
+
+
